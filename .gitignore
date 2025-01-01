@@ -1,0 +1,10 @@
+.idea
+.DS_Store
+nohup.out
+docker-compose.yml.*
+wwwroot/*
+mysql/logs/*
+mysql/data/*
+nginx/logs/*
+nginx/conf.d/*
+php83/logs/*

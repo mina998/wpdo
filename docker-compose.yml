@@ -1,0 +1,77 @@
+# version: "3"
+services:
+  nginx:
+    build:
+      context: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8081"
+    volumes:
+      - ${VHOSTS_ROOT}:/wwwroot/
+      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:ro
+      - ${VHOSTS_CONF_DIR}:/etc/nginx/conf.d:ro
+      - ${NGINX_DIR}/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${NGINX_DIR}/fastcgi-php.conf:/etc/nginx/fastcgi-php.conf:ro
+      - ${NGINX_DIR}/fastcgi_params:/etc/nginx/fastcgi_params:ro
+      - ${NGINX_LOG_DIR}:/var/log/nginx:rw
+    tmpfs:
+      - /tmp/fastcgi_cache:rw,noexec,nosuid,size=512m
+    restart: always
+    networks:
+      - default
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+      nproc:
+        soft: 65535
+        hard: 65535
+
+  php83:
+    # build:
+    #   context: ./php83
+    #   args:
+    #     ALPINE_MIRROR: $ALPINE_MIRROR
+    #     PHP_EXTENSIONS: "$PHP83_EXTENSIONS"
+    #     TZ: "$TZ"
+    image: skisscc/php83:wpcli
+    container_name: php83
+    expose:
+      - 9000
+    volumes:
+      - ${VHOSTS_ROOT}:/wwwroot/
+      - ${PHP83_DIR}/php.ini:/usr/local/etc/php/php.ini:ro
+      - ${PHP83_DIR}/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ${PHP83_LOG_DIR}:/var/log/php
+    # tmpfs:
+    #   - /tmp/fastcgi_cache:rw,noexec,nosuid,size=512m
+    restart: always
+    networks:
+      - default
+
+  mysql:
+    image: mysql:8.0.38
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${MYSQL_DIR}/mysql.conf:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
+      - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
+    restart: always
+    networks:
+      - default
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "%"
+      TZ: "$TZ"
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.0.0/24
