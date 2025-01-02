@@ -103,7 +103,7 @@ function install_wp {
     # 创建数据库配置文件
     docker exec php83 wp config create --dbname=$DATABASE_NAME --dbuser=$DATABASE_NAME --dbpass=$database_password --dbprefix=$db_prefix --dbhost=mysql:3306 --path=$site_doc_root --allow-root --quiet
     # 安装WordPress程序
-    docker exec php83 wp core install --url="http://$INPUT_DOMAIN_NAME" --title="My Blog" --admin_user=$wp_user --admin_password=$wp_pass --admin_email=$wp_mail --skip-email --path=$site_doc_root --allow-root
+    docker exec php83 wp core install --url="https://$INPUT_DOMAIN_NAME" --title="My Blog" --admin_user=$wp_user --admin_password=$wp_pass --admin_email=$wp_mail --skip-email --path=$site_doc_root --allow-root
     # WP配置文件中添加新常量
     local wp_const="\ndefine('WP_POST_REVISIONS', false);"
     # 插入到文件
