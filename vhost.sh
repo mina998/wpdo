@@ -410,12 +410,6 @@ function site_restore {
     local temp_dir=$BACKUP_STORAGE_DIR/temp
     # 数据库名
     local database_name="sql_$(echo "$SITE_HOSTNAME" | tr '.' '_' | tr '-' '_')"
-    # 判断临时文件夹是否存在
-    if [ ! -d "$temp_dir" ]; then
-        mkdir -p "$temp_dir"
-    else
-        rm -rf "$temp_dir" && mkdir -p "$temp_dir"
-    fi
     # 查看备份
     echoSB "备份文件列表, 总容量: $(du -sh $BACKUP_STORAGE_DIR)"
     # 查看备份 ls -lrthgG
@@ -438,6 +432,12 @@ function site_restore {
     if [ ! -f "$site_backup_file_path" ]; then
         echoCC "[$site_backup_file_path] 指定文件不存在."
         return $?
+    fi
+    # 判断临时文件夹是否存在
+    if [ ! -d "$temp_dir" ]; then
+        mkdir -p "$temp_dir"
+    else
+        rm -rf "$temp_dir" && mkdir -p "$temp_dir"
     fi
     # 解压文件
     tar -I zstd -xf "$site_backup_file_path" -C "$temp_dir"
