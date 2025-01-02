@@ -17,7 +17,7 @@ services:
       - ${NGINX_DIR}/fastcgi_params:/etc/nginx/fastcgi_params:ro
       - ${NGINX_LOG_DIR}:/var/log/nginx:rw
     tmpfs:
-      - /tmp/fastcgi_cache:rw,noexec,nosuid,size=512m
+      - /var/cache/nginx/fastcgi_cache:rw,noexec,nosuid,size=512m
     restart: always
     networks:
       - default
