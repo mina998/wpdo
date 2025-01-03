@@ -2,13 +2,19 @@
 FROM alpine:3.20 AS builder
 
 ARG DOCKER_SOURCE_URL=https://github.com/mina998/wpdo/raw/refs/heads/nginx/nginx-1.26.2.tar.gz
+# 添加 Brotli 模块的源码地址
+ARG BROTLI_VERSION=1.0.9
 
 # 创建必要的目录
 RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx \ 
+    && apk add --no-cache --virtual .build-deps build-base pcre-dev zlib-dev openssl-dev perl linux-headers git brotli-dev brotli-static \ 
     && wget -O nginx-1.26.2.tar.gz ${DOCKER_SOURCE_URL} \
     && tar -zxvf nginx-1.26.2.tar.gz \
+    # 下载并解压 Brotli 模块
+    && git clone --recursive https://github.com/google/ngx_brotli.git \ 
+    # 下载并解压 Cache Purge 模块
+    && git clone https://github.com/nginx-modules/ngx_cache_purge.git \
     && cd nginx-1.26.2 \
-    && apk add --no-cache --virtual .build-deps build-base pcre-dev zlib-dev openssl-dev perl linux-headers \
     && ./configure \
     --prefix=/etc/nginx \
     --sbin-path=/usr/sbin/nginx \
@@ -48,6 +54,8 @@ RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /
     --with-stream_realip_module \
     --with-stream_ssl_module \
     --with-stream_ssl_preread_module \
+    --add-module=../ngx_brotli \
+    --add-module=../ngx_cache_purge \ 
     --with-cc-opt='-Os -fstack-clash-protection -Wformat -Werror=format-security -fno-plt -g' \
     --with-ld-opt='-Wl,--as-needed,-O1,--sort-common -Wl,-z,pack-relative-relocs' \
     && make -j$(nproc) \
@@ -65,7 +73,7 @@ ARG DOCKER_ENTRYPOINT_URL=https://github.com/mina998/wpdo/raw/refs/heads/nginx/d
 # 创建必要目录并安装运行时依赖
 RUN cd / \ 
     && mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx /wwwroot \ 
-    && apk add --no-cache pcre zlib openssl \
+    && apk add --no-cache pcre zlib openssl brotli \
     && addgroup -S nginx \
     && adduser -S nginx -G nginx \
     && chown -R nginx:nginx /etc/nginx /var/cache/nginx /var/log/nginx /var/run/nginx \ 
