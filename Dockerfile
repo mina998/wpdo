@@ -1,13 +1,11 @@
 # 构建阶段
 FROM alpine:3.20 AS builder
 
+ARG DOCKER_SOURCE_URL=https://github.com/mina998/wpdo/raw/refs/heads/nginx/nginx-1.26.2.tar.gz
+
 # 创建必要的目录
-RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx /wwwroot \ 
-    && apk add --no-cache git \
-    && git clone -b nginx https://github.com/mina998/wpdo.git wwwroot \
-    && cd wwwroot \
-    && mv docker-entrypoint.sh /docker-entrypoint.sh \
-    && mv docker-entrypoint.d/ /docker-entrypoint.d/ \
+RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx \ 
+    && wget -O nginx-1.26.2.tar.gz ${DOCKER_SOURCE_URL} \
     && tar -zxvf nginx-1.26.2.tar.gz \
     && cd nginx-1.26.2 \
     && apk add --no-cache --virtual .build-deps build-base pcre-dev zlib-dev openssl-dev perl linux-headers \
@@ -57,17 +55,24 @@ RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /
     # 清理构建文件
     && rm -rf /build/* \
     && apk del .build-deps \
-    && cd .. && rm -rf ./*
+    && cd .. && rm -rf nginx-1.26.2
 
 # 最终镜像
 FROM alpine:3.20
+
+ARG DOCKER_ENTRYPOINT_URL=https://github.com/mina998/wpdo/raw/refs/heads/nginx/docker-entrypoint.d.tar.gz
+
 # 创建必要目录并安装运行时依赖
 RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx /wwwroot \ 
     && apk add --no-cache pcre zlib openssl \
     && addgroup -S nginx \
     && adduser -S nginx -G nginx \
     && chown -R nginx:nginx /etc/nginx /var/cache/nginx /var/log/nginx /var/run/nginx 
-
+    && wget -O docker-entrypoint.d.tar.gz ${DOCKER_ENTRYPOINT_URL} \
+    && tar -zxvf docker-entrypoint.d.tar.gz \
+    && mv docker-entrypoint.d/docker-entrypoint.sh /docker-entrypoint.sh \
+    && mv docker-entrypoint.d/ /docker-entrypoint.d/
+    && rm -rf docker-entrypoint.d.tar.gz
 
 # 从构建阶段复制编译好的文件
 COPY --from=builder /etc/nginx /etc/nginx \
