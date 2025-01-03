@@ -63,21 +63,22 @@ FROM alpine:3.20
 ARG DOCKER_ENTRYPOINT_URL=https://github.com/mina998/wpdo/raw/refs/heads/nginx/docker-entrypoint.d.tar.gz
 
 # 创建必要目录并安装运行时依赖
-RUN mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx /wwwroot \ 
+RUN cd / \ 
+    && mkdir -p /etc/nginx /usr/lib/nginx/modules /var/cache/nginx /var/log/nginx /var/run/nginx /wwwroot \ 
     && apk add --no-cache pcre zlib openssl \
     && addgroup -S nginx \
     && adduser -S nginx -G nginx \
-    && chown -R nginx:nginx /etc/nginx /var/cache/nginx /var/log/nginx /var/run/nginx 
+    && chown -R nginx:nginx /etc/nginx /var/cache/nginx /var/log/nginx /var/run/nginx \ 
     && wget -O docker-entrypoint.d.tar.gz ${DOCKER_ENTRYPOINT_URL} \
     && tar -zxvf docker-entrypoint.d.tar.gz \
     && mv docker-entrypoint.d/docker-entrypoint.sh /docker-entrypoint.sh \
-    && mv docker-entrypoint.d/ /docker-entrypoint.d/
+    && chmod +x /docker-entrypoint.sh \
     && rm -rf docker-entrypoint.d.tar.gz
 
 # 从构建阶段复制编译好的文件
-COPY --from=builder /etc/nginx /etc/nginx \
-                    /usr/sbin/nginx /usr/sbin/nginx \
-                    /usr/lib/nginx/modules /usr/lib/nginx/modules
+COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
+COPY --from=builder /etc/nginx /etc/nginx
+COPY --from=builder /usr/lib/nginx/modules /usr/lib/nginx/modules
 
 WORKDIR /wwwroot
 
