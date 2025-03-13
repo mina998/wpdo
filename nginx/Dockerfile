@@ -105,7 +105,7 @@ RUN cd / \
     # 设置 SSL 目录
     && SSL=/usr/local/nginx/ssl \
     # 安装运行时依赖
-    && apk add --no-cache pcre zlib openssl brotli tzdata sqlite-libs readline gnu-libiconv libxml2 sqlite-libs libcurl oniguruma argon2-libs libsodium \ 
+    && apk add --no-cache pcre zlib openssl brotli tzdata sqlite-libs readline gnu-libiconv libxml2 sqlite-libs libcurl oniguruma argon2-libs libsodium icu-libs icu-data-full libintl \
     # 创建用户和组
     && getent group ${GROUP} || addgroup -S ${GROUP} \
     && getent passwd ${USER} || adduser -S -D -H -s /sbin/nologin -G ${GROUP} ${USER} \
@@ -136,6 +136,7 @@ COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=php83 /usr/local /usr/local
 # 复制PHP扩展所需的共享库文件
 COPY --from=php83 /usr/lib /usr/lib
+COPY --from=php83 /lib /lib
 
 WORKDIR /wwwroot
 EXPOSE 80 443
