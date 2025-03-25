@@ -432,7 +432,7 @@ function site_restore {
     fi
     # 检测文件格式
     if [[ ! $site_backup_file =~ .*\.tar\.zst$ ]]; then
-        echoCC "[$site_backup_file]非指定的压缩格式"
+        echoCC "[$site_backup_file]非指定的压缩格式."
         return $?
     fi
     # 检查文件是否存在
@@ -453,6 +453,10 @@ function site_restore {
         # 恢复数据库
         echo -e "${SB}恢复数据库${ED}"
         local database_backup_file="$temp_dir/db.sql"
+        # 删除整个数据库
+        docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysql -uroot -e "DROP DATABASE IF EXISTS \`$database_name\`;"
+        # 重新创建空数据库
+        docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysql -uroot -e "CREATE DATABASE \`$database_name\`;"
         # 使用pv显示进度
         pv $database_backup_file | docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysql -uroot $database_name
         if [ $? -eq 0 ]; then
