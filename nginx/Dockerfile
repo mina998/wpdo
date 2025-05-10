@@ -75,7 +75,7 @@ RUN cd / && apk update \
 FROM php:8.3.17-fpm-alpine3.20 AS php83
 ARG USER
 ARG GROUP
-ARG PHP_EXTENSIONS="pdo_mysql mysqli gd curl opcache exif imagick intl zip soap"
+ARG PHP_EXTENSIONS="pdo_mysql mysqli gd curl opcache exif imagick intl zip soap memcached"
 ARG ALPINE_MIRROR="dl-cdn.alpinelinux.org"
 # 系统配置和扩展安装
 RUN set -ex \
